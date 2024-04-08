@@ -42,57 +42,64 @@ class Player {
 }
 
 const player = new Player();
-
+const keys = {
+  left: { pressed: false },
+  right: { pressed: false },
+};
 // player.update();
 
 function animate() {
   c?.clearRect(0, 0, canvas!.width, canvas!.height);
   requestAnimationFrame(animate);
   player.update();
-  // console.log("run");
+  if (keys.right.pressed) {
+    player.velocity.x = 5;
+  } else {
+    player.velocity.x = 0;
+  }
+  if (keys.left.pressed) {
+    player.velocity.x = -5;
+  } else if (keys.right.pressed) {
+    player.velocity.x = 5;
+  }
 }
 animate();
 
 addEventListener("keydown", ({ keyCode }) => {
-  // console.log(keyCode);
   switch (keyCode) {
     case 65:
-      console.log("left");
-      player.velocity.x = -2.4;
-
+      // player.velocity.x = -2.4;
+      keys.left.pressed = true;
       break;
+
     case 83:
       console.log("down");
       break;
     case 68:
-      console.log("right");
-      player.velocity.x = 2.4;
+      keys.right.pressed = true;
+
       break;
     case 87:
-      console.log("up");
-      player.velocity.y -= 20;
+      player.velocity.y -= 10;
       break;
   }
 });
 
 addEventListener("keyup", ({ keyCode }) => {
-  console.log(keyCode);
+  // console.log(keyCode);
   switch (keyCode) {
     case 65:
-      console.log("left");
-      player.velocity.x = 0;
-
+      // player.velocity.x = 0;
+      keys.left.pressed = false;
       break;
     case 83:
       console.log("down");
       break;
     case 68:
-      console.log("right");
-      player.velocity.x = 0;
+      keys.right.pressed = false;
       break;
     case 87:
       console.log("up");
-      // player.velocity.y -= 20;
       break;
   }
 });
