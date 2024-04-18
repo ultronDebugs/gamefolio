@@ -80,10 +80,13 @@ function animate() {
   } else {
     player.velocity.x = 0;
   }
-  if (keys.left.pressed) {
-    player.velocity.x = -5;
-  } else if (keys.right.pressed) {
+  // move player
+  if (keys.right.pressed && player.position.x < 405) {
     player.velocity.x = 5;
+  } else if (keys.left.pressed && player.position.x > 100) {
+    player.velocity.x = -5;
+  } else {
+    player.velocity.x = 0;
   }
   //platform collisions detection below
   if (
