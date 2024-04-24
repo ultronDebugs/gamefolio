@@ -1,4 +1,5 @@
 // some comment to make things shut up
+import car from "../src/images/car.jpg";
 
 const canvas = document.querySelector("canvas");
 const c = canvas?.getContext("2d");
@@ -47,34 +48,51 @@ class Platform {
   position: { x: number; y: number };
   height: number;
   width: number;
-  constructor() {
+  image: CanvasImageSource;
+  constructor({
+    x,
+    y,
+    image,
+  }: {
+    x: number;
+    y: number;
+    image: CanvasImageSource;
+  }) {
     this.position = {
-      x: 200,
-      y: 100,
+      x,
+      y,
     };
     this.height = 20;
-
+    this.image = image;
     this.width = 200;
   }
   draw() {
-    c!.fillStyle = "blue";
-    c?.fillRect(this.position.x, this.position.y, this.width, this.height);
+    c?.drawImage(this.image, this.position.x, this.position.y);
   }
 }
-
+const image = new Image();
+image.src = car;
 const player = new Player();
-const platform = new Platform();
+// console.log(car);
+// const platform = new Platform();
+const platforms = [
+  new Platform({ x: 200, y: 300, image: image }),
+  new Platform({ x: 400, y: 200, image: image }),
+];
 const keys = {
   left: { pressed: false },
   right: { pressed: false },
 };
-// player.update();
 
+let scrollOffset = 0;
 function animate() {
   c?.clearRect(0, 0, canvas!.width, canvas!.height);
   requestAnimationFrame(animate);
   player.update();
-  platform.draw();
+  platforms.forEach((platform) => {
+    platform.draw();
+  });
+
   if (keys.right.pressed) {
     player.velocity.x = 5;
   } else {
@@ -87,16 +105,33 @@ function animate() {
     player.velocity.x = -5;
   } else {
     player.velocity.x = 0;
+    if (keys.right.pressed) {
+      platforms.forEach((platform) => {
+        platform.position.x -= 5;
+        scrollOffset += 5;
+      });
+    } else if (keys.left.pressed) {
+      platforms.forEach((platform) => {
+        platform.position.x += 5;
+        scrollOffset -= 5;
+      });
+    }
   }
+
   //platform collisions detection below
-  if (
-    player.position.y + player.height <= platform.position.y &&
-    player.position.y + player.height + player.velocity.y >=
-      platform.position.y &&
-    player.position.x + player.width >= platform.position.x &&
-    player.position.x <= platform.position.x + platform.width
-  ) {
-    player.velocity.y = 0;
+  platforms.forEach((platform) => {
+    if (
+      player.position.y + player.height <= platform.position.y &&
+      player.position.y + player.height + player.velocity.y >=
+        platform.position.y &&
+      player.position.x + player.width >= platform.position.x &&
+      player.position.x <= platform.position.x + platform.width
+    ) {
+      player.velocity.y = 0;
+    }
+  });
+  if (scrollOffset > 2000) {
+    // console.log("player wins");
   }
 }
 animate();
