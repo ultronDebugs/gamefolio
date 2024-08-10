@@ -1,19 +1,45 @@
 // some comment to make things shut up
-import car from "./assets/landscape/Platform.png";
+import platformImage from "./assets/landscape/Platform.png";
+// import spike from "./assets/landscape/Circular_Saw.png ";
+
+import cloudBackground from "./assets/landscape/Castle_Background_0.png";
+import spriteIdleRight from "./assets/Gangster Pixel Character Pack/Gangsters_2/Idle_2.png";
+import spriteRunRight from "./assets/Gangster Pixel Character Pack/Gangsters_2/Walk.png";
 
 const canvas = document.querySelector("canvas");
 const c = canvas?.getContext("2d");
-canvas!.width = innerWidth;
-canvas!.height = innerHeight - 300;
+canvas!.width = 1024;
+canvas!.height = 576;
 
 const gravity = 0.5;
 
+const createImage = (imageSrc: string) => {
+  const image = new Image();
+  image.src = imageSrc;
+  return image;
+};
 //player class
 class Player {
   position: { x: number; y: number };
   width: number;
   height: number;
   velocity: { x: number; y: number };
+  frames: number;
+  image;
+  sprites: {
+    stand: {
+      right: HTMLImageElement;
+      cropWidth: number;
+      left: HTMLImageElement;
+    };
+    run: {
+      right: HTMLImageElement;
+      cropWidth: number;
+      left: HTMLImageElement;
+    };
+  };
+  currentSprite;
+  currentCropWidth;
   constructor() {
     this.position = {
       x: 100,
@@ -23,23 +49,50 @@ class Player {
       x: 0,
       y: 1,
     };
-    this.width = 25;
-    this.height = 25;
+    this.width = 128;
+    this.height = 128;
+    this.image = createImage(spriteIdleRight);
+    this.frames = 0;
+    this.sprites = {
+      stand: {
+        right: createImage(spriteIdleRight),
+        cropWidth: 100,
+        left: createImage(spriteIdleRight),
+      },
+      run: {
+        right: createImage(spriteRunRight),
+        cropWidth: 100,
+        left: createImage(spriteRunRight),
+      },
+    };
+    this.currentSprite = this.sprites.stand.right;
+    this.currentCropWidth = 90;
   }
 
   draw() {
-    c!.fillStyle = "red";
-    c?.fillRect(this.position.x, this.position.y, this.width, this.height);
+    c?.drawImage(
+      this.currentSprite,
+      128 * this.frames,
+      0,
+      128,
+      128,
+      this.position.x,
+      this.position.y,
+      this.width,
+      this.height
+    );
   }
   update() {
+    this.frames++;
+    if (this.frames === 13) {
+      this.frames = 0;
+    }
     this.draw();
     this.position.y += this.velocity.y;
     this.position.x += this.velocity.x;
     // the code right below here is gravity implementation
     if (this.position.y + this.height + this.velocity.y <= canvas!.height) {
       this.velocity.y += gravity;
-    } else {
-      this.velocity.y += 0;
     }
   }
 }
@@ -72,42 +125,111 @@ class Platform {
   }
 }
 
-const landImage = new Image();
-landImage.src = car;
-landImage.width = 48;
+class GenericObject {
+  position: { x: number; y: number };
+  height: number;
+  width: number;
+  image: CanvasImageSource;
+  constructor({
+    x,
+    y,
+    image,
+  }: {
+    x: number;
+    y: number;
+    image: CanvasImageSource & HTMLImageElement;
+  }) {
+    this.position = {
+      x,
+      y,
+    };
+    this.height = image.height;
 
-const player = new Player();
-// console.log(car);
-// const platform = new Platform();
-// const platforms = [
-//   new Platform({ x: 200, y: 951, image: landImage }),
-//   new Platform({ x: 400, y: 951, image: landImage }),
-// ];
+    this.image = image;
+    this.width = image.width;
+  }
+  draw() {
+    c?.drawImage(this.image, this.position.x, this.position.y);
+  }
+}
 
-let lands: Platform[] = [];
+const backgroundImage = createImage(cloudBackground);
+
+const landImage = createImage(platformImage);
+
+let player = new Player();
+
+let land: Platform[] = [];
+
+let backgroundScreen: GenericObject[] = [];
 
 for (let i = 0; i < 100; i++) {
-  const land = new Platform({
+  const background = new GenericObject({
+    x: 0 + i + i * 319,
+    y: canvas!.height - 180,
+    image: backgroundImage,
+  });
+  backgroundScreen.push(background);
+}
+
+// const genericObjects = [new GenericObject({})];
+
+for (let i = 0; i < 100; i++) {
+  const landTile = new Platform({
     x: 0 + i + i * 45,
-    y: innerHeight - 310,
+    y: canvas!.height - 12,
     image: landImage,
   });
-  lands.push(land);
+  land.push(landTile);
 }
+let scrollOffset = 0;
+
+const initGame = () => {
+  player = new Player();
+
+  land = [];
+
+  backgroundScreen = [];
+
+  for (let i = 0; i < 100; i++) {
+    const background = new GenericObject({
+      x: 0 + i + i * 319,
+      y: canvas!.height - 180,
+      image: backgroundImage,
+    });
+    backgroundScreen.push(background);
+  }
+
+  // const genericObjects = [new GenericObject({})];
+
+  for (let i = 0; i < 100; i++) {
+    const landTile = new Platform({
+      x: 0 + i + i * 45,
+      y: canvas!.height - 12,
+      image: landImage,
+    });
+    land.push(landTile);
+  }
+  scrollOffset = 0;
+};
 
 const keys = {
   left: { pressed: false },
   right: { pressed: false },
 };
 
-let scrollOffset = 0;
 function animate() {
   c?.clearRect(0, 0, canvas!.width, canvas!.height);
+  backgroundScreen.forEach((background) => {
+    background.draw();
+  });
+
   requestAnimationFrame(animate);
-  player.update();
-  lands.forEach((land) => {
+  land.forEach((land) => {
     land.draw();
   });
+  player.update();
+
   // platforms.forEach((platform) => {
   //   platform.draw();
   // });
@@ -119,22 +241,24 @@ function animate() {
   }
   // move player and move platforms with parallax effect
   if (keys.right.pressed && player.position.x < 405) {
-    player.velocity.x = 3.5;
+    player.velocity.x = 5;
   } else if (keys.left.pressed && player.position.x > 100) {
-    player.velocity.x = -3.5;
+    player.velocity.x = -5;
   } else {
     player.velocity.x = 0;
     if (keys.right.pressed) {
-      lands.forEach((land) => {
+      backgroundScreen.forEach((background) => {
+        background.position.x -= 3;
+      });
+      land.forEach((land) => {
         land.position.x -= 5;
       });
       scrollOffset += 5;
-
-      // platforms.forEach((platform) => {
-      //   platform.position.x -= 5;
-      // });
     } else if (keys.left.pressed) {
-      lands.forEach((land) => {
+      backgroundScreen.forEach((background) => {
+        background.position.x += 3;
+      });
+      land.forEach((land) => {
         land.position.x += 5;
       });
       scrollOffset -= 5;
@@ -145,19 +269,13 @@ function animate() {
   }
 
   // stops scrolling if  player is scrolled left passed -30
-  if (keys.left.pressed && scrollOffset < -5) {
+  if (keys.left.pressed && scrollOffset <= -300) {
     // scrollOffset = -30;
     player.velocity.x = 0;
-    lands.forEach((land) => {
-      land.position.x;
+    land.forEach((land) => {
+      land.position.x += 0;
     });
   }
-
-  //stops scrolling if player is scrolled right passed 3000
-  // if (scrollOffset > 30) {
-  //   // scrollOffset = 3;
-  //   player.velocity.y = 0;
-  // }
 
   //platform collisions detection below
   /* The comment `//platform collisions detection below` is indicating that the code block following
@@ -166,23 +284,18 @@ function animate() {
     and dimensions. If a collision is detected, it sets the player's vertical velocity to 0,
     effectively stopping the player from falling through the platform. */
 
-  // platforms.forEach((platform) => {
-  //   if (
-  //     player.position.y + player.height <= platform.position.y &&
-  //     player.position.y + player.height + player.velocity.y >=
-  //       platform.position.y &&
-  //     player.position.x + player.width >= platform.position.x &&
-  //     player.position.x <= platform.position.x + platform.width
-  //   ) {
-  //     player.velocity.y = 0;
-  //   }
-  // });
-
+  // win condition
   if (scrollOffset > 20000) {
     console.log("player wins");
   }
 
-  lands.forEach((platform) => {
+  // lose condition
+  if (player.position.y > canvas!.height) {
+    // console.log("you lose");
+    initGame();
+  }
+
+  land.forEach((platform) => {
     if (
       player.position.y + player.height <= platform.position.y &&
       player.position.y + player.height + player.velocity.y >=
@@ -196,24 +309,18 @@ function animate() {
 }
 
 // audio playback
-function playBackgroundMusic(): void {
-  const audio = document.getElementById("background-music") as HTMLAudioElement;
-  audio.play();
-}
-function pauseBackgroundMusic(): void {
-  const audio = document.getElementById("background-music") as HTMLAudioElement;
-  audio.pause();
-}
+/**
+ * The function `playBackgroundMusic` plays the background music on a webpage.
+ */
+// function playBackgroundMusic(): void {
+//   const audio = document.getElementById("background-music") as HTMLAudioElement;
+//   audio.play();
+// }
 
 function playJumpSound(): void {
   const audio = document.getElementById("jump-sound") as HTMLAudioElement;
   audio.play();
 }
-function pauseJumpSound(): void {
-  const audio = document.getElementById("jump-sound") as HTMLAudioElement;
-  audio.pause();
-}
-console.log(pauseBackgroundMusic, pauseJumpSound);
 
 //
 animate();
@@ -223,7 +330,7 @@ addEventListener("keydown", ({ keyCode }) => {
     case 65:
       // player.velocity.x = -2.4;
       keys.left.pressed = true;
-      playBackgroundMusic();
+      // playBackgroundMusic();
       break;
 
     case 83:
@@ -231,7 +338,8 @@ addEventListener("keydown", ({ keyCode }) => {
       break;
     case 68:
       keys.right.pressed = true;
-      playBackgroundMusic();
+      player.currentSprite = player.sprites.run.right;
+      // playBackgroundMusic();
 
       break;
     case 87:
@@ -252,6 +360,7 @@ addEventListener("keyup", ({ keyCode }) => {
       break;
     case 68:
       keys.right.pressed = false;
+      player.currentSprite = player.sprites.stand.right;
       break;
     case 87:
       // console.log("up");
