@@ -1,7 +1,6 @@
 // some comment to make things shut up
 import platformImage from "./assets/landscape/Platform.png";
-// import spike from "./assets/landscape/Circular_Saw.png ";
-
+// import spike from "./assets/landscape/Circular_Saw.png";
 import cloudBackground from "./assets/landscape/Castle_Background_0.png";
 import spriteIdleRight from "./assets/Gangster Pixel Character Pack/Gangsters_2/Idle_2.png";
 import spriteRunRight from "./assets/Gangster Pixel Character Pack/Gangsters_2/Walk.png";
@@ -10,6 +9,7 @@ const canvas = document.querySelector("canvas");
 const c = canvas?.getContext("2d");
 canvas!.width = 1024;
 canvas!.height = 576;
+// c?.fill("evenodd");
 
 const gravity = 0.5;
 
@@ -84,7 +84,7 @@ class Player {
   }
   update() {
     this.frames++;
-    if (this.frames === 13) {
+    if (this.frames === 11) {
       this.frames = 0;
     }
     this.draw();
