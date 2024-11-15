@@ -153,6 +153,20 @@ class GenericObject {
   }
 }
 
+class Obstacles extends GenericObject {
+  constructor({
+    x,
+    y,
+    image,
+  }: {
+    x: number;
+    y: number;
+    image: CanvasImageSource & HTMLImageElement;
+  }) {
+    super({ x, y, image });
+  }
+}
+
 const backgroundImage = createImage(cloudBackground);
 
 const landImage = createImage(platformImage);
@@ -232,7 +246,7 @@ function animate() {
 
   // platforms.forEach((platform) => {
   //   platform.draw();
-  // });
+  // })
 
   if (keys.right.pressed) {
     player.velocity.x = 5;
