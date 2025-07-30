@@ -2,6 +2,7 @@
 import platformImage from "./assets/landscape/Platform.png";
 // import spike from "./assets/landscape/Circular_Saw.png";
 import cloudBackground from "./assets/landscape/Castle_Background_0.png";
+import axeTrap from "./assets/landscape/Axe_Trap.png";
 import spriteIdleRight from "./assets/Gangster Pixel Character Pack/Gangsters_2/Idle_2.png";
 import spriteRunRight from "./assets/Gangster Pixel Character Pack/Gangsters_2/Walk.png";
 
@@ -10,6 +11,9 @@ const c = canvas?.getContext("2d");
 canvas!.width = 1024;
 canvas!.height = 576;
 // c?.fill("evenodd");
+
+const obstacles = [];
+obstacles.push(1, 2, 3, 4, 5, 6, 7, 8, 9);
 
 const gravity = 0.5;
 
@@ -153,7 +157,11 @@ class GenericObject {
   }
 }
 
-class Obstacles extends GenericObject {
+class Obstacle {
+  position: { x: number; y: number };
+  height: number;
+  width: number;
+  image: CanvasImageSource;
   constructor({
     x,
     y,
@@ -161,11 +169,25 @@ class Obstacles extends GenericObject {
   }: {
     x: number;
     y: number;
+
     image: CanvasImageSource & HTMLImageElement;
   }) {
-    super({ x, y, image });
+    this.position = {
+      x,
+      y,
+    };
+    this.height = image.height;
+    this.image = image;
+    this.width = image.width;
+  }
+  draw() {
+    c?.drawImage(this.image, this.position.x, this.position.y);
   }
 }
+
+const trap = createImage(axeTrap);
+
+const obstacle = new Obstacle({ image: trap, x: 500, y: 400 });
 
 const backgroundImage = createImage(cloudBackground);
 
@@ -234,6 +256,7 @@ const keys = {
 
 function animate() {
   c?.clearRect(0, 0, canvas!.width, canvas!.height);
+
   backgroundScreen.forEach((background) => {
     background.draw();
   });
@@ -242,8 +265,9 @@ function animate() {
   land.forEach((land) => {
     land.draw();
   });
-  player.update();
+  obstacle.draw();
 
+  player.update();
   // platforms.forEach((platform) => {
   //   platform.draw();
   // })
@@ -253,6 +277,9 @@ function animate() {
   } else {
     player.velocity.x = 0;
   }
+
+  // object collision detection for the player against the obstacle
+
   // move player and move platforms with parallax effect
   if (keys.right.pressed && player.position.x < 405) {
     player.velocity.x = 5;
@@ -266,6 +293,7 @@ function animate() {
       });
       land.forEach((land) => {
         land.position.x -= 5;
+        obstacle.position.x -= 0.02;
       });
       scrollOffset += 5;
     } else if (keys.left.pressed) {
@@ -274,6 +302,7 @@ function animate() {
       });
       land.forEach((land) => {
         land.position.x += 5;
+        obstacle.position.x += 0.02;
       });
       scrollOffset -= 5;
       // platforms.forEach((platform) => {
@@ -320,6 +349,16 @@ function animate() {
       player.velocity.y = 0;
     }
   });
+
+  if (
+    player.position.y + player.height <= obstacle.position.y &&
+    player.position.y + player.height + player.velocity.y >=
+      obstacle.position.y &&
+    player.position.x + player.width >= obstacle.position.x &&
+    player.position.x <= obstacle.position.x + obstacle.width
+  ) {
+    player.velocity.y = 0;
+  }
 }
 
 // audio playback
